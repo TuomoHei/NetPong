@@ -5,8 +5,10 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     public float startSpeed = 10f;
-    public float maxSpeed = 30f;
+    public float maxSpeed = 20f;
     public float speedIncrease = 1f;
+
+    public bool gameStart = false;
 
     private float currentSpeed;
 
@@ -22,6 +24,12 @@ public class Ball : MonoBehaviour
 
     void Update()
     {
+        if (!gameStart)
+        {
+            currentSpeed = 0;
+            currentDir = Vector2.zero;
+        }
+
         if (ballReset)
         {
             return;

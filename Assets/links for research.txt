@@ -1,2 +1,4 @@
-https://github.com/nxrighthere/ENet-CSharp
+https://github.com/RevenantX/LiteNetLib
+https://github.com/RevenantX/NetGameExample
+
 https://subscription.packtpub.com/book/game_development/9781849692328/1/ch01lvl1sec22/creating-a-multiplayer-pong-game

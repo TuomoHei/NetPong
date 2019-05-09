@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using ENet;
 
 public class Player : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class Player : MonoBehaviour
     public float moveRange = 9f;
 
     public bool isMovable = true;
+
+    private Vector3 networkPos;
 
     void Update()
     {
