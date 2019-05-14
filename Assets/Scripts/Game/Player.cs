@@ -5,6 +5,9 @@ using LiteNetLib;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField]
+    private Client client;
+
     public float moveSpeed = 15f;
     public float moveRange = 9f;
 

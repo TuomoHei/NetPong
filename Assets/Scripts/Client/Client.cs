@@ -35,6 +35,8 @@ public class Client : MonoBehaviour, INetEventListener
 
     private int ping;
 
+    public string thisIP;
+
     private void Start()
     {
         netClient = new NetManager(this)
@@ -71,13 +73,14 @@ public class Client : MonoBehaviour, INetEventListener
 
         else
         {
-            netClient.SendBroadcast(new byte[] { 1 }, 5000); //byte[] data, int port
+            netClient.SendBroadcast(new byte[] { 1 }, 2310); //byte[] data, int port
         }
     }
 
-    public void Connect(string ip)
+    public void Connect(string ip, int port)
     {
-        netClient.Connect(ip, 2310, "NetPong");
+        netClient.Connect(ip, port, "NetPong"); //2310-2320
+        thisIP = ip;
     }
 
     private void OnDestroy()
