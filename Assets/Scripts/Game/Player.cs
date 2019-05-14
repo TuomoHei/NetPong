@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using ENet;
+using LiteNetLib;
 
 public class Player : MonoBehaviour
 {
@@ -11,6 +11,11 @@ public class Player : MonoBehaviour
     public bool isMovable = true;
 
     private Vector3 networkPos;
+
+    void Start()
+    {
+        //isMovable = 
+    }
 
     void Update()
     {

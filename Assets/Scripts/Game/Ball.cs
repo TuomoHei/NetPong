@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using LiteNetLib;
 
 public class Ball : MonoBehaviour
 {
@@ -26,8 +27,8 @@ public class Ball : MonoBehaviour
     {
         if (!gameStart)
         {
-            currentSpeed = 0;
-            currentDir = Vector2.zero;
+            //currentSpeed = 0;
+            //currentDir = Vector2.zero;
         }
 
         if (ballReset)
