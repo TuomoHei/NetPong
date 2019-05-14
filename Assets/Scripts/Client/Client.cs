@@ -2,10 +2,19 @@
 using System.Net.Sockets;
 using UnityEngine;
 using LiteNetLib;
+using LiteNetLib.Utils;
 
 public class Client : MonoBehaviour, INetEventListener
 {
+    private readonly NetPacketProcessor netPacketProcessor = new NetPacketProcessor();
+
     private NetManager netClient;
+
+    [SerializeField]
+    private GameObject clientPlayer;
+
+    [SerializeField]
+    private GameObject clientPlayerInterpolated;
 
     [SerializeField]
     private GameObject clientBall;
@@ -13,25 +22,32 @@ public class Client : MonoBehaviour, INetEventListener
     [SerializeField]
     private GameObject clientBallInterpolated;
 
-    private Vector3 newPos;
-    private Vector3 oldPos;
+    private float playerNewPos;
+    private float playerOldPos;
 
-    private float lerpTime;
+    private Vector3 ballNewPos;
+    private Vector3 ballOldPos;
+
+    private float playerLerpTime;
+    private float ballLerpTime;
+
+    private NetPeer server;
 
     private int ping;
 
-    void Start()
+    private void Start()
     {
         netClient = new NetManager(this)
         {
             UnconnectedMessagesEnabled = true,
-            UpdateTime = 15
+            UpdateTime = 15,
+            AutoRecycle = true
         };
 
         netClient.Start();
     }
 
-    void Update()
+    private void Update()
     {
         netClient.PollEvents();
 
@@ -39,14 +55,18 @@ public class Client : MonoBehaviour, INetEventListener
 
         if (peer != null && peer.ConnectionState == ConnectionState.Connected)
         {
-            var newPos = clientBallInterpolated.transform.position;
+            var playerNewPos = clientPlayerInterpolated.transform.position.z;
+            var ballNewPos = clientBallInterpolated.transform.position;
 
-            newPos.x = Mathf.Lerp(oldPos.x, newPos.x, lerpTime);
-            newPos.z = Mathf.Lerp(oldPos.z, newPos.z, lerpTime);
+            playerNewPos = Mathf.Lerp(playerOldPos, playerNewPos, playerLerpTime);
+            ballNewPos.x = Mathf.Lerp(ballOldPos.x, ballNewPos.x, ballLerpTime);
+            ballNewPos.z = Mathf.Lerp(ballOldPos.z, ballNewPos.z, ballLerpTime);
 
-            clientBallInterpolated.transform.position = newPos;
+            clientPlayerInterpolated.transform.position = new Vector3(0, 0, playerNewPos);
+            clientBallInterpolated.transform.position = ballNewPos;
 
-            lerpTime += Time.deltaTime / Time.fixedDeltaTime;
+            playerLerpTime += Time.deltaTime / Time.fixedDeltaTime;
+            ballLerpTime += Time.deltaTime / Time.fixedDeltaTime;
         }
 
         else
@@ -55,7 +75,12 @@ public class Client : MonoBehaviour, INetEventListener
         }
     }
 
-    void OnDestroy()
+    public void Connect(string ip)
+    {
+        netClient.Connect(ip, 2310, "NetPong");
+    }
+
+    private void OnDestroy()
     {
         if (netClient != null)
         {
@@ -63,55 +88,73 @@ public class Client : MonoBehaviour, INetEventListener
         }
     }
 
-    public void OnPeerConnected(NetPeer peer)
+    private void OnServerState()
     {
-        Debug.Log("Client: Connected to " + peer.EndPoint);
+        
     }
 
-    public void OnNetworkError(IPEndPoint ep, SocketError socketErrorCode)
+    #region INetEventListener
+    void INetEventListener.OnPeerConnected(NetPeer peer)
     {
-        Debug.Log("Client: Received error " + socketErrorCode);
+        Debug.Log("Client || Connected to " + peer.EndPoint);
+        server = peer;
     }
 
-    public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod delMethod)
+    void INetEventListener.OnPeerDisconnected(NetPeer peer, DisconnectInfo dcInfo)
     {
-        newPos.x = reader.GetFloat();
-        newPos.z = reader.GetFloat();
-
-        var pos = clientBall.transform.position;
-
-        oldPos.x = pos.x;
-        oldPos.z = pos.z;
-
-        pos.x = newPos.x;
-        pos.z = newPos.z;
-
-        clientBall.transform.position = pos;
-
-        lerpTime = 0f;
+        server = null;
+        //LogicTimer.Stop();
+        Debug.Log("Client || Disconnected. (Reason: " + dcInfo.Reason + ")");
     }
 
-    public void OnNetworkReceiveUnconnected(IPEndPoint remoteEP, NetPacketReader reader, UnconnectedMessageType mType)
+    void INetEventListener.OnNetworkError(IPEndPoint ep, SocketError socketErrorCode)
+    {
+        Debug.Log("Client || Error: " + socketErrorCode);
+    }
+
+    void INetEventListener.OnNetworkReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod delMethod)
+    {
+        Packet p = new Packet();
+
+        playerNewPos = p.PlayerPos;
+        ballNewPos.x = reader.GetFloat();
+        ballNewPos.z = reader.GetFloat();
+
+        var playerPos = clientPlayer.transform.position;
+        var ballPos = clientBall.transform.position;
+
+        playerOldPos = playerPos.z;
+        ballOldPos.x = ballPos.x;
+        ballOldPos.z = ballPos.z;
+
+        playerPos.z = playerNewPos;
+        ballPos.x = ballNewPos.x;
+        ballPos.z = ballNewPos.z;
+
+        clientPlayer.transform.position = playerPos;
+        clientBall.transform.position = ballPos;
+
+        playerLerpTime = 0f;
+        ballLerpTime = 0f;
+    }
+
+    void INetEventListener.OnNetworkReceiveUnconnected(IPEndPoint remoteEP, NetPacketReader reader, UnconnectedMessageType mType)
     {
         if (mType == UnconnectedMessageType.BasicMessage && netClient.PeersCount == 0 && reader.GetInt() == 1)
         {
-            Debug.Log("Client: Response received. Connecting to " + remoteEP);
+            Debug.Log("Client || Response received. Connecting to " + remoteEP);
             netClient.Connect(remoteEP, "NetPong");
         }
     }
 
-    public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
+    void INetEventListener.OnNetworkLatencyUpdate(NetPeer peer, int latency)
     {
         ping = latency;
     }
 
-    public void OnConnectionRequest(ConnectionRequest conReq)
+    void INetEventListener.OnConnectionRequest(ConnectionRequest request)
     {
-
+        request.Reject();
     }
-
-    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo dcInfo)
-    {
-        Debug.Log("Client: Disconnected. Reason: " + dcInfo.Reason);
-    }
+    #endregion
 }
