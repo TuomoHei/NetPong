@@ -1,5 +1,6 @@
 ﻿public enum NetworkTags
 {
     PlayerPosition,
-    PlayerPositionsArray
+    PlayerPositionsArray,
+    BallPosition
 }

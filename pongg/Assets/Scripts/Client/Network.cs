@@ -7,7 +7,6 @@ using UnityEngine;
 
 public class Network : MonoBehaviour, INetEventListener
 {
-
     public int id = -1;
 
     public Player player;
@@ -86,12 +85,12 @@ public class Network : MonoBehaviour, INetEventListener
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        throw new System.NotImplementedException();
+        Debug.Log("[CLIENT] " + peer + " disconnected: " + disconnectInfo);
     }
 
     public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
     {
-        throw new System.NotImplementedException();
+        Debug.Log("[CLIENT] " + endPoint + " socket error: " + socketError);
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
@@ -130,7 +129,7 @@ public class Network : MonoBehaviour, INetEventListener
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
     {
-        throw new System.NotImplementedException();
+        Debug.Log("[CLIENT] " + remoteEndPoint + ": " + messageType);
     }
 
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
