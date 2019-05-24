@@ -117,6 +117,7 @@ public class Network : MonoBehaviour, INetEventListener
                     if (!netPlayersDictionary.ContainsKey(playerid))
                     {
                         netPlayersDictionary.Add(playerid, new NetPlayer());
+                        id = (int)playerid;
                     }
 
                     netPlayersDictionary[playerid].X = reader.GetFloat();
